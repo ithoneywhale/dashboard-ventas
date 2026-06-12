@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Honey Whale</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              yellow: '#FDCB09',
+              dark: '#050505',
+              panel: '#111111'
+            }
+          },
+          screens: {
+            'xs': '375px',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Flatpickr (Calendario) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="antialiased min-h-screen pb-12 flex flex-col bg-brand-dark text-gray-200">
+
+  <!-- Backdrop Modal del Calendario -->
+  <div id="calendar-backdrop"
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[99998] hidden transition-opacity duration-300 opacity-0 pointer-events-none">
+  </div>
+
+  <!-- Navbar -->
+  <nav class="glass-panel mx-2 sm:mx-4 mt-2 sm:mt-4 px-3 sm:px-6 py-2 xs:py-3 sm:py-4 flex justify-between items-center gap-1.5 xs:gap-3 sm:gap-4 sticky top-2 sm:top-4 z-50">
+    <div class="flex items-center gap-2 xs:gap-3 min-w-0">
+      <img src="assets/hw.jpg" alt="Honey Whale"
+        onerror="this.src='https://ui-avatars.com/api/?name=HW&background=FDCB09&color=000&rounded=true'"
+        class="w-10 h-10 xs:w-11 xs:h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-brand-yellow flex-shrink-0 shadow-[0_0_10px_rgba(253,203,9,0.2)]">
+      <div class="min-w-0">
+        <h1 class="text-base xs:text-lg sm:text-xl font-bold tracking-tight text-brand-yellow truncate leading-tight" id="campaign-title">Dashboard de Campaña</h1>
+        <p class="text-[10px] xs:text-xs text-gray-400 truncate leading-none mt-0.5 xs:mt-1" id="last-updated">Actualizando...</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-1.5 xs:gap-2 sm:gap-4 flex-shrink-0">
+      <div id="loader" class="loader-spinner hidden w-4 h-4 xs:w-5 xs:h-5"></div>
+
+      <!-- Custom Date Filter Dropdown -->
+      <div class="relative inline-block text-left" id="date-dropdown-container">
+        <button id="date-filter-btn" type="button" onclick="toggleDateMenu()"
+          class="bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm font-medium rounded-lg px-2.5 xs:px-3 sm:px-3 py-2 xs:py-2.5 sm:py-2 transition-all active:scale-95 flex items-center gap-1 sm:gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.3)] backdrop-blur-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="text-brand-yellow w-4 h-4 xs:w-[22px] xs:h-[22px] sm:w-[18px] sm:h-[18px]">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+            <line x1="16" x2="16" y1="2" y2="6" />
+            <line x1="8" x2="8" y1="2" y2="6" />
+            <line x1="3" x2="21" y1="10" y2="10" />
+          </svg>
+          <span id="date-filter-label" class="hidden sm:inline">Histórico Total</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="hidden sm:block ml-1 text-gray-400">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        <div id="date-dropdown-menu"
+          class="hidden absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-[#0a0a0a]/95 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-[200] overflow-hidden backdrop-blur-2xl">
+          <div class="py-1 flex flex-col">
+            <a href="#" onclick="selectDateFilter('all', 'Histórico Total'); return false;" class="text-gray-300 hover:bg-brand-yellow/10 hover:text-brand-yellow px-4 py-2.5 text-sm transition-colors font-medium border-l-2 border-transparent hover:border-brand-yellow">Histórico Total</a>
+            <a href="#" onclick="selectDateFilter('today', 'Hoy'); return false;" class="text-gray-300 hover:bg-brand-yellow/10 hover:text-brand-yellow px-4 py-2.5 text-sm transition-colors font-medium border-l-2 border-transparent hover:border-brand-yellow">Hoy</a>
+            <a href="#" onclick="selectDateFilter('week', 'Últimos 7 Días'); return false;" class="text-gray-300 hover:bg-brand-yellow/10 hover:text-brand-yellow px-4 py-2.5 text-sm transition-colors font-medium border-l-2 border-transparent hover:border-brand-yellow">Últimos 7 Días</a>
+            <a href="#" onclick="selectDateFilter('month', 'Este Mes'); return false;" class="text-gray-300 hover:bg-brand-yellow/10 hover:text-brand-yellow px-4 py-2.5 text-sm transition-colors font-medium border-l-2 border-transparent hover:border-brand-yellow">Este Mes</a>
+            
+            <div class="px-3 pb-2 pt-3 mt-1 border-t border-white/10">
+              <a href="#" onclick="selectDateFilter('custom', 'Rango'); return false;" class="flex items-center justify-center gap-2 w-full bg-brand-yellow/10 hover:bg-brand-yellow active:bg-brand-yellow text-brand-yellow hover:text-black active:text-black border border-brand-yellow/30 hover:border-brand-yellow active:border-brand-yellow rounded-lg px-4 py-2 text-sm transition-all active:scale-95 font-bold shadow-[0_0_10px_rgba(253,203,9,0.1)] group">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform group-hover:scale-110 group-active:scale-110"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                Rango
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Input oculto para anclar el calendario -->
+        <input type="text" id="flatpickr-input" class="opacity-0 absolute w-0 h-0 border-none outline-none z-[-1] pointer-events-none">
+      </div>
+      
+      <button id="btn-refresh" class="bg-brand-yellow hover:bg-[#E5B508] text-black px-2.5 xs:px-3 sm:px-3 py-2 xs:py-2.5 sm:py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(253,203,9,0.2)] hover:shadow-[0_0_25px_rgba(253,203,9,0.4)] transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 xs:w-[22px] xs:h-[22px] sm:w-[18px] sm:h-[18px]"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+        <span class="hidden sm:inline">Actualizar</span>
+      </button>
+      
+      <button onclick="toggleMobileMenu()" class="md:hidden bg-white/5 border border-white/10 hover:bg-white/10 text-white px-2.5 xs:px-3 py-2 xs:py-2.5 rounded-lg transition-all active:scale-90 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px] xs:w-[22px] xs:h-[22px]"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Error Toast -->
+  <div id="error-toast"
+    class="hidden mx-4 mt-4 glass-panel border-red-500/50 bg-red-900/20 text-red-200 px-4 py-3 rounded flex justify-between items-center">
+    <span id="error-message">Error cargando datos. Se está usando el Mock Data.</span>
+    <button onclick="document.getElementById('error-toast').classList.add('hidden')">×</button>
+  </div>
+
+  <main class="mx-4 mt-6 flex-1 flex flex-col gap-6">
+    <!-- Block 1: KPIs -->
+    <div id="kpis" class="grid grid-cols-2 lg:grid-cols-5 gap-4 scroll-mt-20">
+      <div
+        class="glass-panel p-5 relative overflow-hidden group hover:border-brand-yellow/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(253,203,9,0.15)] animate-fade-in-up stagger-1">
+        <p class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-1">Total Canjeados</p>
+        <h2 class="text-2xl xs:text-3xl sm:text-3xl font-bold text-white" id="kpi-total">--</h2>
+      </div>
+      <div
+        class="glass-panel p-5 relative overflow-hidden group hover:border-brand-yellow/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(253,203,9,0.15)] flex flex-col justify-between animate-fade-in-up stagger-2">
+        <p class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-1">Canjeados Hoy</p>
+        <div class="flex items-end gap-2 mt-1">
+          <h2 class="text-2xl xs:text-3xl sm:text-3xl font-bold text-white leading-none" id="kpi-today">--</h2>
+          <span class="text-[10px] xs:text-xs sm:text-xs font-semibold px-2 py-0.5 rounded bg-white/10 text-gray-300 mb-0.5"
+            id="kpi-trend">--</span>
+        </div>
+      </div>
+      <div
+        class="glass-panel p-5 relative overflow-hidden group hover:border-brand-yellow/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(253,203,9,0.15)] animate-fade-in-up stagger-3">
+        <p class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-1">Nuevos en Eléctrico</p>
+        <h2 class="text-2xl xs:text-3xl sm:text-3xl font-bold text-brand-yellow" id="kpi-franchise">--%</h2>
+      </div>
+      <div
+        class="glass-panel p-5 relative overflow-hidden group hover:border-brand-yellow/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(253,203,9,0.15)] active:scale-[0.98] cursor-pointer animate-fade-in-up stagger-4"
+        onclick="openLeadsModal()" title="Clic para ver lista de Contactos VIP">
+        <p class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-1">Potenciales Distribuidores</p>
+        <div class="flex items-end gap-2 mt-1">
+          <h2 class="text-2xl xs:text-3xl sm:text-3xl font-bold text-white leading-none" id="kpi-distributors">--</h2>
+          <span class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-0.5" id="kpi-distributors-pct">(--%)</span>
+        </div>
+        <!-- Botón siempre visible para móviles, alojado abajo a la derecha -->
+        <div
+          class="absolute bottom-4 right-4 flex items-center justify-center bg-brand-yellow/10 border border-brand-yellow/20 w-7 h-7 rounded-md transition-all group-hover:bg-brand-yellow group-hover:text-black">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="text-brand-yellow group-hover:text-black transition-colors">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+      <div
+        class="glass-panel p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(16,185,129,0.15)] flex justify-between items-center animate-fade-in-up stagger-5">
+        <div class="overflow-hidden pr-2">
+          <p class="text-xs xs:text-sm sm:text-sm text-gray-400 mb-1">Sucursal Líder</p>
+          <h2 class="text-lg xs:text-xl sm:text-xl font-bold text-white mt-1 leading-tight truncate" id="kpi-branch" title="--">--</h2>
+        </div>
+        <div
+          class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold shadow-sm"
+          id="kpi-branch-count" title="Total de canjes">
+          -
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Block 6: Timeline -->
+      <div id="evolucion" class="glass-panel p-5 lg:col-span-3 flex flex-col scroll-mt-20 animate-fade-in-up stagger-2">
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-4">Evolución de Canjes</h3>
+        <div class="flex-1 relative w-full h-full min-h-[250px]">
+          <canvas id="timelineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Block 2: Branches -->
+      <div id="sucursales" class="glass-panel p-5 flex flex-col scroll-mt-20 animate-fade-in-up stagger-3">
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-4">Canjes por Sucursal</h3>
+        <div class="flex-1 relative w-full h-full min-h-[250px]">
+          <canvas id="branchesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Block 3: Products -->
+      <div id="productos" class="glass-panel p-5 flex flex-col scroll-mt-20 animate-fade-in-up stagger-4">
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-4">Productos más solicitados</h3>
+        <div class="flex-1 relative w-full h-full min-h-[250px] flex items-center justify-center">
+          <canvas id="productsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block 7: Heatmap & Peak Hours & Block 5: Lead Profile -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Peak Hours & Heatmap -->
+      <div id="horarios" class="glass-panel p-5 scroll-mt-20 animate-fade-in-up stagger-5">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-base sm:text-lg font-semibold text-white">Actividad por Horario</h3>
+          <div class="text-right">
+            <p class="text-xs text-brand-yellow font-semibold uppercase tracking-wider">Hora Pico</p>
+            <p class="text-lg font-bold text-white" id="peak-hour">--</p>
+          </div>
+        </div>
+        <div class="w-full overflow-x-auto pb-2">
+          <div id="heatmap-container" class="min-w-[500px]">
+            <!-- Generado por JS -->
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-white/10">
+          <canvas id="hourlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Block 5: Profile Matrix -->
+      <div id="perfil" class="glass-panel p-5 flex flex-col justify-between scroll-mt-20 animate-fade-in-up stagger-6">
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-4">¿Qué compran Novatos vs Expertos?</h3>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="p-3 bg-white/5 rounded-lg border border-brand-yellow/20">
+            <p class="text-[10px] sm:text-xs text-gray-400">Novatos (Primera vez)</p>
+            <p class="text-lg sm:text-xl font-bold text-brand-yellow" id="profile-new-count">--</p>
+          </div>
+          <div class="p-3 bg-white/5 rounded-lg border border-white/5">
+            <p class="text-[10px] sm:text-xs text-gray-400">Expertos (Ya ruedan)</p>
+            <p class="text-lg sm:text-xl font-bold text-white" id="profile-exp-count">--</p>
+          </div>
+        </div>
+        <h4 class="text-sm font-semibold text-gray-300 mb-2 text-center">Preferencias cruzadas</h4>
+        <div class="relative w-full flex-1 min-h-[220px]">
+          <canvas id="profileChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal para Distribuidores -->
+  <div id="leads-modal" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300">
+    <!-- Backdrop oscuro con blur -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeLeadsModal()"></div>
+
+    <!-- Modal content -->
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl px-4">
+      <div
+        class="glass-panel rounded-xl overflow-hidden border border-brand-yellow/30 shadow-2xl shadow-brand-yellow/10">
+        <div class="p-5 border-b border-white/10 flex justify-between items-center bg-black/40">
+          <div>
+            <h3 class="text-xl font-bold text-white">Prospectos VIP (Distribuidores)</h3>
+            <p class="text-xs text-gray-400 mt-1">Contactos calientes para expansión B2B</p>
+          </div>
+          <button onclick="closeLeadsModal()"
+            class="text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-lg hover:bg-white/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="overflow-x-auto max-h-[60vh] sm:overflow-x-visible">
+          <table class="w-full text-left text-sm whitespace-normal sm:whitespace-nowrap">
+            <thead class="bg-black/60 text-brand-yellow uppercase text-xs tracking-wider sticky top-0 z-10 shadow-md">
+              <tr>
+                <th class="px-3 sm:px-5 py-4 hidden sm:table-cell">Fecha</th>
+                <th class="px-3 sm:px-5 py-4">Prospecto</th>
+                <th class="px-3 sm:px-5 py-4 hidden sm:table-cell">Interés / Sucursal</th>
+                <th class="px-3 sm:px-5 py-4 text-right sm:text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="modal-table-body" class="divide-y divide-white/5 text-gray-300">
+              <!-- JS populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hamburger Side Drawer -->
+  <div id="mobile-menu"
+    class="fixed inset-0 z-[200] hidden opacity-0 transition-opacity duration-300 pointer-events-none">
+    <!-- Backdrop oscuro -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleMobileMenu()"></div>
+
+    <!-- Cajón lateral (Drawer) -->
+    <div id="mobile-drawer"
+      class="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-[#0a0a0a] border-l border-brand-yellow/20 shadow-[-10px_0_30px_rgba(0,0,0,0.8)] transform translate-x-full transition-transform duration-300 flex flex-col">
+      <!-- Header del Drawer -->
+      <div class="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+        <h2 class="text-xl font-bold text-white tracking-wide">Navegación</h2>
+        <button onclick="toggleMobileMenu()"
+          class="text-gray-400 hover:text-brand-yellow transition-colors bg-white/5 p-2 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lista de enlaces -->
+      <div class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
+        <a href="#kpis" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <path d="M3 9h18" />
+              <path d="M9 21V9" />
+            </svg></div>
+          Estadísticas Generales
+        </a>
+        <a href="#evolucion" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18" />
+              <path d="m19 9-5 5-4-4-3 3" />
+            </svg></div>
+          Evolución de Canjes
+        </a>
+        <a href="#sucursales" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg></div>
+          Canjes por Sucursal
+        </a>
+        <a href="#productos" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+              <path d="M22 12A10 10 0 0 0 12 2v10z" />
+            </svg></div>
+          Productos Solicitados
+        </a>
+        <a href="#horarios" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+              <path d="M10.4 12.6a2 2 0 1 1 3 3L8 21l-4 1 1-4Z" />
+            </svg></div>
+          Horarios de Actividad
+        </a>
+        <a href="#perfil" onclick="toggleMobileMenu()"
+          class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-300 font-medium hover:bg-brand-yellow/10 hover:text-brand-yellow transition-all group">
+          <div class="p-2 rounded-lg bg-white/5 group-hover:bg-brand-yellow/20"><svg xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg></div>
+          Perfil de Clientes
+        </a>
+      </div>
+
+      <!-- Footer del Drawer -->
+      <div class="p-6 border-t border-white/10 mt-auto">
+        <p class="text-xs text-gray-500 text-center uppercase tracking-widest font-semibold">Honey Whale © 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
