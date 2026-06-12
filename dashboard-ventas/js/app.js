@@ -44,11 +44,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Auto refresh
+  // Auto refresh - Reemplazado por Tiempo Real (Pusher)
   if (CONFIG.refreshInterval > 0) {
     setInterval(() => {
       init();
     }, CONFIG.refreshInterval * 1000);
+  }
+
+  // Integración con Pusher (Señal en tiempo real)
+  if (CONFIG.pusherKey && CONFIG.pusherKey !== "PON_TU_KEY_AQUI") {
+    console.log("🟢 Iniciando conexión a Pusher...");
+    
+    // Configurar Pusher
+    const pusher = new Pusher(CONFIG.pusherKey, {
+      cluster: CONFIG.pusherCluster
+    });
+
+    // Suscribirse al canal
+    const channel = pusher.subscribe('dashboard-ventas');
+
+    // Escuchar el evento 'actualizar'
+    channel.bind('actualizar', function(data) {
+      console.log("⚡ Señal de actualización recibida desde Pusher/n8n. Recargando datos...");
+      
+      // Mostrar toast sutil (opcional, para que el usuario sepa que hay datos nuevos)
+      const btn = document.getElementById('btn-refresh');
+      if(btn) {
+        btn.classList.add('animate-pulse', 'bg-green-500');
+        setTimeout(() => btn.classList.remove('animate-pulse', 'bg-green-500'), 2000);
+      }
+      
+      // Obtener la data más reciente del webhook
+      init();
+    });
   }
 
   // Inicializar Flatpickr (Calendario)
