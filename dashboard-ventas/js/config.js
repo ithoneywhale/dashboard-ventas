@@ -1,7 +1,12 @@
 const CONFIG = {
-  webhookUrl: "https://flows.honey-whale.com/webhook/sheets", // URL del webhook de n8n
-  webhookToken: "0eWWWKL45SDzLxf9isf9hdQRKgVOi6WAkbxYF5kSUK4l97S0biaRgk4IpWHEyfTW", // Token de autorización
+  // Configuración de Pusher (Tiempo Real)
+  pusherKey: "da1c97bf769b5abdf3e2", // Llave de Pusher
+  pusherCluster: "us2",
+
+  // Configuraciones del Dashboard
+  webhookUrl: "https://flows.honey-whale.com/webhook/sheets", // URL de donde lee los datos completos
+  webhookToken: "0eWWWKL45SDzLxf9isf9hdQRKgVOi6WAkbxYF5kSUK4l97S0biaRgk4IpWHEyfTW",
   campañaNombre: "Bono Verde",
-  refreshInterval: 60, // segundos (60 = 1 minuto)
-  sucursales: [], // dejar vacío para autodetectar del dataset
+  refreshInterval: 0, // Apagamos el polling (antes en 60), ahora usamos tiempo real
+  sucursales: [],
 };
