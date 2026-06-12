@@ -916,9 +916,10 @@ function openLeadsModal() {
   } else {
     globalFranchiseLeads.forEach(lead => {
       // Formatear teléfono si es posible, o mostrarlo directo
-      const phoneDisplay = lead.phone || 'Sin número';
+      const phoneStr = lead.phone ? String(lead.phone) : '';
+      const phoneDisplay = phoneStr || 'Sin número';
       // Crear botón de WhatsApp
-      const cleanPhone = lead.phone ? lead.phone.replace(/\D/g, '') : '';
+      const cleanPhone = phoneStr.replace(/\D/g, '');
       let waButton = `<span class="text-xs text-gray-600">No disp.</span>`;
       if (cleanPhone.length >= 10) {
         const waLink = `https://wa.me/52${cleanPhone}?text=Hola%20${encodeURIComponent(lead.name)},%20vimos%20tu%20inter%C3%A9s%20en%20distribuir%20Honey%20Whale.`;
